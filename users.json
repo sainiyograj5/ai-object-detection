@@ -1,0 +1,14 @@
+{
+  "testuser": {
+    "username": "testuser",
+    "email": "test@example.com",
+    "hashed_password": "$2b$12$Fj8Ii6hWjlWmbDXzbGUdu.Cd6Qtag4U6OBdbYkl7xTCcYlOlOlejO",
+    "created_at": "2026-01-12T09:49:34.716854"
+  },
+  "yograj ": {
+    "username": "yograj ",
+    "email": "yograjyj@gmail.com",
+    "hashed_password": "$2b$12$8dzidh3EFXpKnF7OgoZTz.9iCs6ojnpbWMkhBE.4niMGydPAemH16",
+    "created_at": "2026-01-12T09:49:57.832484"
+  }
+}

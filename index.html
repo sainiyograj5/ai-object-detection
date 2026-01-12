@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Object Detection App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .login-section, .signup-section, .upload-section {
+            display: none;
+        }
+
+        .login-section.active, .signup-section.active, .upload-section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #f8f9ff;
+        }
+
+        .file-upload {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .file-upload:hover {
+            background-color: #f8f9ff;
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-label {
+            color: #667eea;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .preview-section {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .preview-section.active {
+            display: block;
+        }
+
+        .image-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .results-section {
+            margin-top: 20px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .detections-list {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .detection-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .detection-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .detection-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .detection-confidence {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-error {
+            background: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+
+        .alert-success {
+            background: #efe;
+            color: #3c3;
+            border: 1px solid #cfc;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            margin-left: 10px;
+            width: auto;
+        }
+
+        .json-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+
+        .section-title {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+
+        .form-footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .password-requirements {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+            padding-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Object Detection</h1>
+            <p>Powered by YOLOv11 - Upload an image to detect objects</p>
+        </div>
+
+        <!-- Login Section -->
+        <div class="card login-section active" id="loginSection">
+            <h2 class="section-title">Login</h2>
+            <div id="loginAlert"></div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginUsername">Username</label>
+                    <input type="text" id="loginUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" name="password" required>
+                </div>
+                <button type="submit" class="btn">Login</button>
+            </form>
+            <div class="form-footer">
+                <p>Don't have an account? <a href="#" onclick="showSignup(); return false;">Sign up here</a></p>
+            </div>
+        </div>
+
+        <!-- Signup Section -->
+        <div class="card signup-section" id="signupSection">
+            <h2 class="section-title">Create Account</h2>
+            <div id="signupAlert"></div>
+            <form id="signupForm">
+                <div class="form-group">
+                    <label for="signupUsername">Username</label>
+                    <input type="text" id="signupUsername" name="username" required minlength="3">
+                    <div class="password-requirements">At least 3 characters</div>
+                </div>
+                <div class="form-group">
+                    <label for="signupEmail">Email</label>
+                    <input type="email" id="signupEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" name="password" required minlength="6">
+                    <div class="password-requirements">At least 6 characters</div>
+                </div>
+                <div class="form-group">
+                    <label for="signupConfirmPassword">Confirm Password</label>
+                    <input type="password" id="signupConfirmPassword" name="confirmPassword" required minlength="6">
+                </div>
+                <button type="submit" class="btn">Sign Up</button>
+                <button type="button" class="btn btn-secondary" onclick="showLogin()">Back to Login</button>
+            </form>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="card upload-section" id="uploadSection">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h2 class="section-title" style="margin: 0;">Upload Image for Detection</h2>
+                    <p style="color: #666; font-size: 0.9em; margin-top: 5px;">Welcome, <span id="currentUser"></span>!</p>
+                </div>
+                <button class="btn logout-btn" onclick="logout()">Logout</button>
+            </div>
+            
+            <div id="uploadAlert"></div>
+            
+            <div class="file-upload" onclick="document.getElementById('imageInput').click()">
+                <input type="file" id="imageInput" accept="image/*">
+                <div class="file-upload-label">
+                    <p style="font-size: 48px; margin-bottom: 10px;">📁</p>
+                    <p>Click to upload an image</p>
+                    <p style="font-size: 14px; color: #999; margin-top: 5px;">Supports JPG, PNG, JPEG</p>
+                </div>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 15px; color: #667eea; font-weight: 600;">Processing image...</p>
+            </div>
+
+            <div class="preview-section" id="previewSection">
+                <h3 class="section-title">Detection Results</h3>
+                
+                <div class="stats" id="stats"></div>
+                
+                <div class="image-container">
+                    <img id="resultImage" alt="Detection result">
+                </div>
+
+                <div class="detections-list" id="detectionsList"></div>
+
+                <div>
+                    <h3 class="section-title">JSON Response</h3>
+                    <div class="json-output" id="jsonOutput"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        let authToken = null;
+        let currentUsername = null;
+
+        // Show/Hide sections
+        function showLogin() {
+            document.getElementById('signupSection').classList.remove('active');
+            document.getElementById('loginSection').classList.add('active');
+            document.getElementById('signupForm').reset();
+            document.getElementById('signupAlert').innerHTML = '';
+        }
+
+        function showSignup() {
+            document.getElementById('loginSection').classList.remove('active');
+            document.getElementById('signupSection').classList.add('active');
+            document.getElementById('loginForm').reset();
+            document.getElementById('loginAlert').innerHTML = '';
+        }
+
+        // Signup functionality
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('signupUsername').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('signupConfirmPassword').value;
+            
+            // Validate passwords match
+            if (password !== confirmPassword) {
+                showAlert('signupAlert', 'Passwords do not match!', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/signup`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, email, password })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showAlert('signupAlert', 'Account created successfully! Redirecting to login...', 'success');
+                    
+                    setTimeout(() => {
+                        showLogin();
+                        document.getElementById('loginUsername').value = username;
+                    }, 2000);
+                } else {
+                    const error = await response.json();
+                    showAlert('signupAlert', error.detail || 'Signup failed', 'error');
+                }
+            } catch (error) {
+                showAlert('signupAlert', 'Connection error. Make sure the backend is running.', 'error');
+            }
+        });
+
+        // Login functionality
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.access_token;
+                    currentUsername = username;
+                    
+                    showAlert('loginAlert', 'Login successful!', 'success');
+                    
+                    setTimeout(() => {
+                        document.getElementById('loginSection').classList.remove('active');
+                        document.getElementById('uploadSection').classList.add('active');
+                        document.getElementById('currentUser').textContent = currentUsername;
+                    }, 500);
+                } else {
+                    const error = await response.json();
+                    showAlert('loginAlert', error.detail || 'Login failed', 'error');
+                }
+            } catch (error) {
+                showAlert('loginAlert', 'Connection error. Make sure the backend is running.', 'error');
+            }
+        });
+
+        // Image upload functionality
+        document.getElementById('imageInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('previewSection').classList.remove('active');
+            document.getElementById('uploadAlert').innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_URL}/uploadimage`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayResults(data);
+                } else if (response.status === 401) {
+                    showAlert('uploadAlert', 'Session expired. Please login again.', 'error');
+                    setTimeout(() => logout(), 2000);
+                } else {
+                    const error = await response.json();
+                    showAlert('uploadAlert', error.detail || 'Upload failed', 'error');
+                }
+            } catch (error) {
+                showAlert('uploadAlert', 'Error processing image: ' + error.message, 'error');
+            } finally {
+                document.getElementById('loading').classList.remove('active');
+            }
+        });
+
+        function displayResults(data) {
+            // Display stats
+            const statsHTML = `
+                <div class="stat-card">
+                    <h3>${data.total_objects}</h3>
+                    <p>Objects Detected</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${data.processing_time}s</h3>
+                    <p>Processing Time</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${data.detections.length}</h3>
+                    <p>Total Detections</p>
+                </div>
+            `;
+            document.getElementById('stats').innerHTML = statsHTML;
+
+            // Display image
+            document.getElementById('resultImage').src = data.image_with_boxes;
+
+            // Display detections
+            const detectionsHTML = data.detections.map(det => `
+                <div class="detection-item">
+                    <span class="detection-name">${det.class_name}</span>
+                    <span class="detection-confidence">${(det.confidence * 100).toFixed(1)}%</span>
+                </div>
+            `).join('');
+            document.getElementById('detectionsList').innerHTML = detectionsHTML;
+
+            // Display JSON
+            document.getElementById('jsonOutput').textContent = JSON.stringify(data, null, 2);
+
+            // Show results
+            document.getElementById('previewSection').classList.add('active');
+        }
+
+        function showAlert(elementId, message, type) {
+            const alertClass = type === 'error' ? 'alert-error' : 'alert-success';
+            document.getElementById(elementId).innerHTML = `
+                <div class="alert ${alertClass}">${message}</div>
+            `;
+        }
+
+        function logout() {
+            authToken = null;
+            currentUsername = null;
+            document.getElementById('uploadSection').classList.remove('active');
+            document.getElementById('loginSection').classList.add('active');
+            document.getElementById('previewSection').classList.remove('active');
+            document.getElementById('loginForm').reset();
+            document.getElementById('imageInput').value = '';
+        }
+    </script>
+</body>
+</html>
